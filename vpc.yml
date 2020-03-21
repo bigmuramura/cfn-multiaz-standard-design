@@ -162,3 +162,30 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+  StackProjectName:
+    Value: !Ref ProjectName
+    Export:
+      Name: StackProjectName
+    Value: !Ref ProjectName
+  StackVPC:
+    Value: !Ref VPC
+    Export:
+      Name: StackVPC
+  StackPublicSubnet1:
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: StackPublicSubnet1
+  StackPublicSubnet2:
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: StackPublicSubnet2
+  StackPrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: StackPrivateSubnet1
+  StackPrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: StackPrivateSubnet2
