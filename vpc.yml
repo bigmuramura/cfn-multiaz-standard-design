@@ -167,25 +167,25 @@ Outputs:
   StackProjectName:
     Value: !Ref ProjectName
     Export:
-      Name: StackProjectName
+      Name: !Sub "${AWS::StackName}-ProjectName"
     Value: !Ref ProjectName
   StackVPC:
     Value: !Ref VPC
     Export:
-      Name: StackVPC
+      Name: !Sub "${AWS::StackName}-VPC"
   StackPublicSubnet1:
     Value: !Ref PublicSubnet1
     Export:
-      Name: StackPublicSubnet1
+      Name: !Sub "${AWS::StackName}-PublicSubnet1"
   StackPublicSubnet2:
     Value: !Ref PublicSubnet2
     Export:
-      Name: StackPublicSubnet2
+      Name: !Sub "${AWS::StackName}-PublicSubnet2"
   StackPrivateSubnet1:
     Value: !Ref PrivateSubnet1
     Export:
-      Name: StackPrivateSubnet1
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1"
   StackPrivateSubnet2:
     Value: !Ref PrivateSubnet2
     Export:
-      Name: StackPrivateSubnet2
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2"
