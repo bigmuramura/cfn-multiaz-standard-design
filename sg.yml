@@ -1,0 +1,80 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create Security Group*3
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: kadai1
+    Description: Project Name
+  LinkedStackVPC:
+    Type: String
+    Default: kadai1-vpc-VPC
+    Description: Linked Stack Export Name for VPC
+
+Resources:
+  # Create Security Group for EC2
+  SecurityGroupWeb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${ProjectName}-web-sg"
+      GroupDescription: Accessed by ELB or direct
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "14.9.145.160/32"
+      VpcId:
+        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-web-sg"
+  # Create Security Group for RDS MySQL
+  SecurityGroupDB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${ProjectName}-db-sg"
+      GroupDescription: Accessed by WEB Server
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref SecurityGroupWeb
+      VpcId:
+        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-db-sg"
+  # Create Security Group for ELB
+  SecurityGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${ProjectName}-elb-sg"
+      GroupDescription: Accessed by direct
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: "0.0.0.0/0"
+      VpcId:
+        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-elb-sg"
+Outputs:
+  StackWebSG:
+    Value: !Ref SecurityGroupWeb
+    Export:
+      Name: !Sub "${AWS::StackName}-webg"
+  StackDBSG:
+    Value: !Ref SecurityGroupDB
+    Export:
+      Name: !Sub "${AWS::StackName}-db"
+  StackELBSG:
+    Value: !Ref SecurityGroupELB
+    Export:
+      Name: !Sub "${AWS::StackName}-elb"
