@@ -69,7 +69,7 @@ Outputs:
   StackWebSG:
     Value: !Ref SecurityGroupWeb
     Export:
-      Name: !Sub "${AWS::StackName}-webg"
+      Name: !Sub "${AWS::StackName}-web"
   StackDBSG:
     Value: !Ref SecurityGroupDB
     Export:
