@@ -1,0 +1,139 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create DBSubnetGroup*1, ParameterGroup*1
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: kadai1
+    Description: Project Name
+  ParameterFamily:
+    Type: String
+    Default: mysql8.0
+    AllowedValues:
+      - mysql8.0
+  DBInstanceName:
+    Type: String
+    Default: rds-01
+  MySQLVersion:
+    Type: String
+    Default: 8.0.17
+    AllowedValues:
+      - 8.0.17
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+  DBInstanceStorageSize:
+    Type: String
+    Default: 20
+  DBInstanceStorageType:
+    Type: String
+    Default: gp2
+  DefaultDBName:
+    Type: String
+    Default: abashiri
+  DBMasterUserName:
+    Type: String
+    Default: admin
+    NoEcho: true
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    Default: adminadmin
+    NoEcho: true
+    Type: String
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: "[a-zA-Z0-9]*"
+    ConstraintDescription: must contain only alphanumeric characters.
+  MultiAZ:
+    Default: true
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  LinkedStackVPC:
+    Type: String
+    Default: kadai1-vpc-VPC
+    Description: Linked Stack Export Name for VPC
+  LinkedStackPrivateSubnet1:
+    Type: String
+    Default: kadai1-vpc-PrivateSubnet1
+    Description: Linked Stack Export Name for PrivateSubnet1
+  LinkedStackPrivateSubnet2:
+    Type: String
+    Default: kadai1-vpc-PrivateSubnet2
+    Description: Linked Stack Export Name for PrivateSubnet2
+  LinkedStackDBSG:
+    Type: String
+    Default: kadai1-sg-db
+    Description: Linked Stack Export Name for Security Group for DB
+
+Resources:
+  # Create DB Subnet Group
+  DBSubnetGroup1:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: DB Subnet Group 01
+      DBSubnetGroupName: !Sub "${ProjectName}-dbsubgroup-01"
+      SubnetIds:
+        - Fn::ImportValue: !Sub "${LinkedStackPrivateSubnet1}"
+        - Fn::ImportValue: !Sub "${LinkedStackPrivateSubnet2}"
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-dbsubgroup-01"
+  # Create Parameter Group
+  DBParameterGroup1:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: !Sub "${ProjectName} MySQL Parameter"
+      Family: !Ref ParameterFamily
+      Parameters:
+        long_query_time: 5
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-paragroup-01"
+  # Create DB Instance
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub "${ProjectName}-${DBInstanceName}"
+      Engine: MySQL
+      EngineVersion: !Ref MySQLVersion
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref DBInstanceStorageSize
+      StorageType: !Ref DBInstanceStorageType
+      DBName: !Ref DefaultDBName
+      MasterUsername: !Ref DBMasterUserName
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup1
+      PubliclyAccessible: false
+      MultiAZ: !Ref MultiAZ
+      PreferredBackupWindow: "18:00-18:30"
+      PreferredMaintenanceWindow: "sat:19:00-sat:19:30"
+      AutoMinorVersionUpgrade: false
+      DBParameterGroupName: !Ref DBParameterGroup1
+      VPCSecurityGroups:
+        - Fn::ImportValue: !Sub "${LinkedStackDBSG}"
+      CopyTagsToSnapshot: true
+      BackupRetentionPeriod: 7
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${ProjectName}-${DBInstanceName}"
+    DeletionPolicy: "Delete"
+
+Outputs:
+  StackDBInstanceID:
+    Value: !Ref DBInstance
+    Export:
+      Name: !Sub "${AWS::StackName}-dbInstancID"
+  StackDBInstanceEndpoint:
+    Value: !GetAtt DBInstance.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-dbEndpoint"
+  StackDBName:
+    Value: !Ref DefaultDBName
+    Export:
+      Name: !Sub "${AWS::StackName}-dbName"
