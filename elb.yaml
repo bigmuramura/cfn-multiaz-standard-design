@@ -20,7 +20,7 @@ Resources:
   ELB1:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      #Type: application
+      Type: application
       Name: !Sub ${ProjectName}-${ELBName}
       Scheme: internet-facing
       SecurityGroups:
@@ -50,15 +50,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${TargetGroupName}
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 300
-        - Key: stickiness.enabled
-          Value: false
-        - Key: stickiness.type
-          Value: lb_cookie
-        - Key: stickiness.lb_cookie.duration_seconds
-          Value: 86400
       Targets:
         - Id: !ImportValue kadai1-ec2-EC2Instance1
           Port: 80
