@@ -1,0 +1,71 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create EC2*2
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: kadai1
+    Description: Project Name
+  LinkedStackVPC:
+    Type: String
+    Default: kadai1-vpc-VPC
+    Description: Linked Stack Export Name for VPC
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: kadai1-key
+  EC2InstanceName1:
+    Type: String
+    Default: web-01
+  EC2InstanceName2:
+    Type: String
+    Default: web-02
+  EC2InstanceAMI:
+    Type: String
+    Default: ami-052652af12b58691f
+  EC2InstanceInstanceType:
+    Type: String
+    Default: t2.micro
+  EC2InstanceVolumeType:
+    Type: String
+    Default: gp2
+  EC2InstanceVolumeSize:
+    Type: String
+    Default: 10
+  LinkedStackPublicSubnet1:
+    Type: String
+    Default: kadai1-vpc-PublicSubnet1
+    Description: Linked Stack Export Name for PublicSubnet1
+  LinkedStackPublicSubnet2:
+    Type: String
+    Default: kadai1-vpc-PublicSubnet2
+    Description: Linked Stack Export Name for PublicSubnet2
+  LinkedStackWEBSG:
+    Type: String
+    Default: kadai1-sg-web
+    Description: Linked Stack Export Name for Security Group for EC2
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-${EC2InstanceName1}"
+      ImageId: !Ref EC2InstanceAMI
+      InstanceType: !Ref EC2InstanceInstanceType
+      KeyName: !Ref KeyPairName
+      DisableApiTermination: false
+      EbsOptimized: false
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeType: !Ref EC2InstanceVolumeType
+            VolumeSize: !Ref EC2InstanceVolumeSize
+      SecurityGroupIds:
+        - !ImportValue kadai1-sg-web
+        #- sg-08df378a2a2cb6816
+      #SubnetId: { "Fn::ImportValue": !Sub "${LinkedStackPublicSubnet1}" }
+      SubnetId: !ImportValue kadai1-vpc-PublicSubnet1
+      #SubnetId: subnet-047aa5ac93e9b3327
