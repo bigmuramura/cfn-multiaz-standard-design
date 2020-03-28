@@ -17,27 +17,27 @@ Resources:
   SecurityGroupWeb:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${ProjectName}-web-sg"
+      GroupName: !Sub ${ProjectName}-web-sg
       GroupDescription: Accessed by ELB or direct
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: "0.0.0.0/0"
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: "14.9.145.160/32"
+          CidrIp: 14.9.145.160/32
       VpcId:
-        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+        Fn::ImportValue: !Sub ${LinkedStackVPC}
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-web-sg"
+          Value: !Sub ${ProjectName}-web-sg
   # Create Security Group for RDS MySQL
   SecurityGroupDB:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${ProjectName}-db-sg"
+      GroupName: !Sub ${ProjectName}-db-sg
       GroupDescription: Accessed by WEB Server
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -45,36 +45,36 @@ Resources:
           ToPort: 3306
           SourceSecurityGroupId: !Ref SecurityGroupWeb
       VpcId:
-        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+        Fn::ImportValue: !Sub ${LinkedStackVPC}
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-db-sg"
+          Value: !Sub ${ProjectName}-db-sg
   # Create Security Group for ELB
   SecurityGroupELB:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${ProjectName}-elb-sg"
+      GroupName: !Sub ${ProjectName}-elb-sg
       GroupDescription: Accessed by direct
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: "0.0.0.0/0"
+          CidrIp: 0.0.0.0/0
       VpcId:
-        Fn::ImportValue: !Sub "${LinkedStackVPC}"
+        Fn::ImportValue: !Sub ${LinkedStackVPC}
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-elb-sg"
+          Value: !Sub ${ProjectName}-elb-sg
 Outputs:
   StackWebSG:
     Value: !Ref SecurityGroupWeb
     Export:
-      Name: !Sub "${AWS::StackName}-web"
+      Name: !Sub ${AWS::StackName}-web
   StackDBSG:
     Value: !Ref SecurityGroupDB
     Export:
-      Name: !Sub "${AWS::StackName}-db"
+      Name: !Sub ${AWS::StackName}-db
   StackELBSG:
     Value: !Ref SecurityGroupELB
     Export:
-      Name: !Sub "${AWS::StackName}-elb"
+      Name: !Sub ${AWS::StackName}-elb
