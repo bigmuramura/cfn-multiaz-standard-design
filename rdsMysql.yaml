@@ -77,29 +77,29 @@ Resources:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: DB Subnet Group 01
-      DBSubnetGroupName: !Sub "${ProjectName}-dbsubgroup-01"
+      DBSubnetGroupName: !Sub ${ProjectName}-dbsubgroup-01
       SubnetIds:
-        - Fn::ImportValue: !Sub "${LinkedStackPrivateSubnet1}"
-        - Fn::ImportValue: !Sub "${LinkedStackPrivateSubnet2}"
+        - Fn::ImportValue: !Sub ${LinkedStackPrivateSubnet1}
+        - Fn::ImportValue: !Sub ${LinkedStackPrivateSubnet2}
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-dbsubgroup-01"
+          Value: !Sub ${ProjectName}-dbsubgroup-01
   # Create Parameter Group
   DBParameterGroup1:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: !Sub "${ProjectName} MySQL Parameter"
+      Description: !Sub ${ProjectName} MySQL Parameter
       Family: !Ref ParameterFamily
       Parameters:
         long_query_time: 5
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-paragroup-01"
+          Value: !Sub ${ProjectName}-paragroup-01
   # Create DB Instance
   DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub "${ProjectName}-${DBInstanceName}"
+      DBInstanceIdentifier: !Sub ${ProjectName}-${DBInstanceName}
       Engine: MySQL
       EngineVersion: !Ref MySQLVersion
       DBInstanceClass: !Ref DBInstanceClass
@@ -111,29 +111,37 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup1
       PubliclyAccessible: false
       MultiAZ: !Ref MultiAZ
-      PreferredBackupWindow: "18:00-18:30"
-      PreferredMaintenanceWindow: "sat:19:00-sat:19:30"
+      PreferredBackupWindow: 18:00-18:30
+      PreferredMaintenanceWindow: sat:19:00-sat:19:30
       AutoMinorVersionUpgrade: false
       DBParameterGroupName: !Ref DBParameterGroup1
       VPCSecurityGroups:
-        - Fn::ImportValue: !Sub "${LinkedStackDBSG}"
+        - Fn::ImportValue: !Sub ${LinkedStackDBSG}
       CopyTagsToSnapshot: true
       BackupRetentionPeriod: 7
       Tags:
-        - Key: "Name"
-          Value: !Sub "${ProjectName}-${DBInstanceName}"
-    DeletionPolicy: "Delete"
+        - Key: Name
+          Value: !Sub ${ProjectName}-${DBInstanceName}
+    DeletionPolicy: Delete
 
 Outputs:
   StackDBInstanceID:
     Value: !Ref DBInstance
     Export:
-      Name: !Sub "${AWS::StackName}-dbInstancID"
+      Name: !Sub ${AWS::StackName}-dbInstancID
   StackDBInstanceEndpoint:
     Value: !GetAtt DBInstance.Endpoint.Address
     Export:
-      Name: !Sub "${AWS::StackName}-dbEndpoint"
+      Name: !Sub ${AWS::StackName}-dbEndpoint
   StackDBName:
     Value: !Ref DefaultDBName
     Export:
-      Name: !Sub "${AWS::StackName}-dbName"
+      Name: !Sub ${AWS::StackName}-dbName
+  StadckDBUser:
+    Value: !Ref DBMasterUserName
+    Export:
+      Name: !Sub ${AWS::StackName}-dbUserName
+  StadckDBPassword:
+    Value: !Ref DBPassword
+    Export:
+      Name: !Sub ${AWS::StackName}-dbPassword
