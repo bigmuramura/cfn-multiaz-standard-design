@@ -46,7 +46,7 @@ Parameters:
     Description: Linked Stack Export Name for Security Group for EC2
 
 Resources:
-  EC2Instance:
+  EC2Instance1:
     Type: AWS::EC2::Instance
     Properties:
       Tags:
@@ -65,7 +65,24 @@ Resources:
             VolumeSize: !Ref EC2InstanceVolumeSize
       SecurityGroupIds:
         - !ImportValue kadai1-sg-web
-        #- sg-08df378a2a2cb6816
-      #SubnetId: { "Fn::ImportValue": !Sub "${LinkedStackPublicSubnet1}" }
       SubnetId: !ImportValue kadai1-vpc-PublicSubnet1
-      #SubnetId: subnet-047aa5ac93e9b3327
+  EC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-${EC2InstanceName2}"
+      ImageId: !Ref EC2InstanceAMI
+      InstanceType: !Ref EC2InstanceInstanceType
+      KeyName: !Ref KeyPairName
+      DisableApiTermination: false
+      EbsOptimized: false
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeType: !Ref EC2InstanceVolumeType
+            VolumeSize: !Ref EC2InstanceVolumeSize
+      SecurityGroupIds:
+        - !ImportValue kadai1-sg-web
+      SubnetId: !ImportValue kadai1-vpc-PublicSubnet2
