@@ -49,9 +49,6 @@ Resources:
   EC2Instance1:
     Type: AWS::EC2::Instance
     Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub "${ProjectName}-${EC2InstanceName1}"
       ImageId: !Ref EC2InstanceAMI
       InstanceType: !Ref EC2InstanceInstanceType
       KeyName: !Ref KeyPairName
@@ -66,12 +63,112 @@ Resources:
       SecurityGroupIds:
         - !ImportValue kadai1-sg-web
       SubnetId: !ImportValue kadai1-vpc-PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-${EC2InstanceName1}"
+      # インスタンス初期設定
+      UserData:
+        Fn::Base64: |-
+          #cloud-config
+
+          timezone: Asia/Tokyo
+          locale: ja_JP.utf8
+
+          packages:
+           - mysql
+
+          runcmd:
+           - amazon-linux-extras install nginx1.12 -y
+           - systemctl enable nginx
+           - amazon-linux-extras install php7.4 -y
+           - systemctl enable php-fpm
+           - echo Setting php-fpm
+           - cp -p /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.org
+           - sed -i -e 's/user = apache/user = nginx/' /etc/php-fpm.d/www.conf
+           - sed -i -e 's/group = apache/group = nginx/' /etc/php-fpm.d/www.conf
+           - echo Setting nginx
+           - mkdir -p /var/www
+           - chown nginx. -R /var/www
+           - sed -i -e 's/\/usr\/share\/nginx\/html/\/var\/www/g' /etc/nginx/nginx.conf
+           - echo Setting DB
+           - chown ec2-user. /home/ec2-user/0_init_db.sh
+           - bash /home/ec2-user/0_init_db.sh
+           - systemctl start nginx
+           - systemctl start php-fpm
+
+          write_files:
+           - path: /var/www/index.php
+             permissions: 0644
+             content: |
+                <!DOCTYPE html>
+                <html lang="ja">
+                  <head>
+                    <meta charset="UTF-8">
+                    <title>網走観光</title>
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+                  </head>
+                  <body>
+                    <?php
+                      define('DB_HOST', 'kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com');
+                      define('DB_NAME', 'abashiri');
+                      define('DB_USER', 'admin');
+                      define('DB_PASSWORD', 'adminadmin');
+                      $hostname = gethostname();
+
+                      try {
+                        $dbh = new PDO('mysql:host='.DB_HOST.';dbname='.DB_NAME, DB_USER, DB_PASSWORD);
+
+                        $sth = $dbh->prepare("SELECT * from location");
+                        $sth->execute();
+                        $locations = $sth->fetchAll();
+
+                        $dbh = null;
+                      } catch (PDOException $e) {
+                        print "エラー!: " . $e->getMessage() . "<br/>";
+                        die();
+                      }
+                    ?>
+
+                    <h1 class="text-center mt-3 mb-5"><?php echo $hostname; ?></h2>
+                    <h2 class="text-center mt-3 mb-5">網走観光名所</h2>
+                    <div class="container">
+
+                      <?php foreach ($locations as $location) : ?>
+                      <div class="mb-5 row">
+                        <div class="col-sm-10">
+                          <?php echo $location["id"]; ?>
+                          <?php echo $location["name"]; ?>
+                        </div>
+                      </div>
+                      <?php endforeach; ?>
+
+                    </div>
+                  </body>
+                </html>
+           - path: /home/ec2-user/0_init_db.sh
+             permissions: 0755
+             content: |
+               #!/bin/bash
+               export LANG='ja_JP.UTF-8'
+               ENDPOINT='kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com'
+               echo ${ENDPOINT}
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'create table location (id int not null primary key, name varchar(100));'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (1,"網走監獄");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (2,"流氷砕氷船");'
+           - path: /home/ec2-user/1_insert.sh
+             permissions: 0755
+             content: |
+               #!/bin/bash
+               export LANG='ja_JP.UTF-8'
+               ENDPOINT='kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com'
+               echo ${ENDPOINT}
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (3,"能取岬");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (4,"網走郷土博物館");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (5,"天都山");'
+
   EC2Instance2:
     Type: AWS::EC2::Instance
     Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub "${ProjectName}-${EC2InstanceName2}"
       ImageId: !Ref EC2InstanceAMI
       InstanceType: !Ref EC2InstanceInstanceType
       KeyName: !Ref KeyPairName
@@ -86,3 +183,117 @@ Resources:
       SecurityGroupIds:
         - !ImportValue kadai1-sg-web
       SubnetId: !ImportValue kadai1-vpc-PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${EC2InstanceName2}
+      # インスタンス初期設定
+      UserData:
+        Fn::Base64: |-
+          #cloud-config
+
+          timezone: Asia/Tokyo
+          locale: ja_JP.utf8
+
+          packages:
+           - mysql
+
+          runcmd:
+           - amazon-linux-extras install nginx1.12 -y
+           - systemctl enable nginx
+           - amazon-linux-extras install php7.4 -y
+           - systemctl enable php-fpm
+           - echo Setting php-fpm
+           - cp -p /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.org
+           - sed -i -e 's/user = apache/user = nginx/' /etc/php-fpm.d/www.conf
+           - sed -i -e 's/group = apache/group = nginx/' /etc/php-fpm.d/www.conf
+           - echo Setting nginx
+           - mkdir -p /var/www
+           - chown nginx. -R /var/www
+           - sed -i -e 's/\/usr\/share\/nginx\/html/\/var\/www/g' /etc/nginx/nginx.conf
+           - echo Setting DB
+           - chown ec2-user. /home/ec2-user/0_init_db.sh
+           - bash /home/ec2-user/0_init_db.sh
+           - systemctl start nginx
+           - systemctl start php-fpm
+
+          write_files:
+           - path: /var/www/index.php
+             permissions: 0644
+             content: |
+                <!DOCTYPE html>
+                <html lang="ja">
+                  <head>
+                    <meta charset="UTF-8">
+                    <title>網走観光</title>
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+                  </head>
+                  <body>
+                    <?php
+                      define('DB_HOST', 'kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com');
+                      define('DB_NAME', 'abashiri');
+                      define('DB_USER', 'admin');
+                      define('DB_PASSWORD', 'adminadmin');
+                      $hostname = gethostname();
+
+                      try {
+                        $dbh = new PDO('mysql:host='.DB_HOST.';dbname='.DB_NAME, DB_USER, DB_PASSWORD);
+
+                        $sth = $dbh->prepare("SELECT * from location");
+                        $sth->execute();
+                        $locations = $sth->fetchAll();
+
+                        $dbh = null;
+                      } catch (PDOException $e) {
+                        print "エラー!: " . $e->getMessage() . "<br/>";
+                        die();
+                      }
+                    ?>
+
+                    <h1 class="text-center mt-3 mb-5"><?php echo $hostname; ?></h2>
+                    <h2 class="text-center mt-3 mb-5">網走観光名所</h2>
+                    <div class="container">
+
+                      <?php foreach ($locations as $location) : ?>
+                      <div class="mb-5 row">
+                        <div class="col-sm-10">
+                          <?php echo $location["id"]; ?>
+                          <?php echo $location["name"]; ?>
+                        </div>
+                      </div>
+                      <?php endforeach; ?>
+
+                    </div>
+                  </body>
+                </html>
+           - path: /home/ec2-user/0_init_db.sh
+             permissions: 0755
+             content: |
+               #!/bin/bash
+               export LANG='ja_JP.UTF-8'
+               ENDPOINT='kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com'
+               echo ${ENDPOINT}
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'create table location (id int not null primary key, name varchar(100));'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (1,"網走監獄");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (2,"流氷砕氷船");'
+           - path: /home/ec2-user/1_insert.sh
+             permissions: 0755
+             content: |
+               #!/bin/bash
+               export LANG='ja_JP.UTF-8'
+               ENDPOINT='kadai1-rds-01.c5zt6mwunxxy.ap-northeast-1.rds.amazonaws.com'
+               echo ${ENDPOINT}
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (3,"能取岬");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (4,"網走郷土博物館");'
+               mysql -uadmin -padminadmin abashiri -h $ENDPOINT -e 'insert into location values (5,"天都山");'
+
+Outputs:
+  StackEC2Instance1:
+    Value: !Ref EC2Instance1
+    Export:
+      Name: !Sub ${AWS::StackName}-EC2Instance1
+    Value: !Ref EC2Instance1
+  StackEC2Instance2:
+    Value: !Ref EC2Instance2
+    Export:
+      Name: !Sub ${AWS::StackName}-EC2Instance2
+    Value: !Ref EC2Instance2
