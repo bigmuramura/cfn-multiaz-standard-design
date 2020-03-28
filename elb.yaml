@@ -1,0 +1,76 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create ELB*1, TargetGroup*1
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: kadai1
+    Description: Project Name
+  ELBName:
+    Type: String
+    Default: elb-1
+    Description: ELB Name
+  TargetGroupName:
+    Type: String
+    Default: tg-1
+    Description: ELB Target Group Name
+
+Resources:
+  ELB1:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      #Type: application
+      Name: !Sub ${ProjectName}-${ELBName}
+      Scheme: internet-facing
+      SecurityGroups:
+        - !ImportValue kadai1-sg-elb
+      Subnets:
+        - !ImportValue kadai1-vpc-PublicSubnet1
+        - !ImportValue kadai1-vpc-PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${ELBName}
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !ImportValue kadai1-vpc-VPC
+      Name: !Sub ${ProjectName}-${TargetGroupName}
+      Protocol: HTTP
+      Port: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckIntervalSeconds: 10
+      Matcher:
+        HttpCode: 200
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${TargetGroupName}
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 300
+        - Key: stickiness.enabled
+          Value: false
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: 86400
+      Targets:
+        - Id: !ImportValue kadai1-ec2-EC2Instance1
+          Port: 80
+        - Id: !ImportValue kadai1-ec2-EC2Instance2
+          Port: 80
+
+  ELBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ELB1
+      Port: 80
+      Protocol: HTTP
