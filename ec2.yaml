@@ -93,8 +93,10 @@ Resources:
              - chown nginx. -R /var/www
              - sed -i -e 's/\/usr\/share\/nginx\/html/\/var\/www/g' /etc/nginx/nginx.conf
              - echo Setting DB
-             - chown ec2-user. /home/ec2-user/0_init_db.sh
-             - bash /home/ec2-user/0_init_db.sh
+             - mkdir -p /home/ec2-user/work
+             - chown ec2-user. /home/ec2-user/work/0_init_db.sh
+             - bash /home/ec2-user/work/0_init_db.sh
+             - chown ec2-user. /home/ec2-user/work/1_insert.sh
              - systemctl start nginx
              - systemctl start php-fpm
 
@@ -147,7 +149,7 @@ Resources:
                       </div>
                     </body>
                   </html>
-             - path: /home/ec2-user/0_init_db.sh
+             - path: /home/ec2-user/work/0_init_db.sh
                permissions: 0755
                content: |
                  #!/bin/bash
@@ -156,7 +158,7 @@ Resources:
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'create table location (id int not null primary key, name varchar(100));'
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'insert into location values (1,"網走監獄");'
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'insert into location values (2,"流氷砕氷船");'
-             - path: /home/ec2-user/1_insert.sh
+             - path: /home/ec2-user/work/1_insert.sh
                permissions: 0755
                content: |
                  #!/bin/bash
@@ -218,9 +220,10 @@ Resources:
              - chown nginx. -R /var/www
              - sed -i -e 's/\/usr\/share\/nginx\/html/\/var\/www/g' /etc/nginx/nginx.conf
              - echo Setting DB
-             - chown ec2-user. /home/ec2-user/0_init_db.sh
-             - bash /home/ec2-user/0_init_db.sh
-             - chown ec2-user. /home/ec2-user/1_insert.sh
+             - mkdir -p /home/ec2-user/work
+             - chown ec2-user. /home/ec2-user/work/0_init_db.sh
+             - bash /home/ec2-user/work/0_init_db.sh
+             - chown ec2-user. /home/ec2-user/work/1_insert.sh
              - systemctl start nginx
              - systemctl start php-fpm
 
@@ -273,7 +276,7 @@ Resources:
                       </div>
                     </body>
                   </html>
-             - path: /home/ec2-user/0_init_db.sh
+             - path: /home/ec2-user/work/0_init_db.sh
                permissions: 0755
                content: |
                  #!/bin/bash
@@ -282,7 +285,7 @@ Resources:
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'create table location (id int not null primary key, name varchar(100));'
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'insert into location values (1,"網走監獄");'
                  mysql -u${DbUserName} -p${DbPassword} ${DbName} -h $ENDPOINT -e 'insert into location values (2,"流氷砕氷船");'
-             - path: /home/ec2-user/1_insert.sh
+             - path: /home/ec2-user/work/1_insert.sh
                permissions: 0755
                content: |
                  #!/bin/bash
